@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         [팝니다/예약중] 카테고리 필터링 (초고성능 최적화)
+// @name         네이버카페 게시글 차단
 // @namespace    http://tampermonkey.net/
-// @version      1.7
-// @description  네이버 카페에서 판매/예약중 게시글 자동 필터링 (초고속 처리)
+// @version      2.0
+// @description  네이버 카페에서 판매/신고 게시글 차단
 // @match        https://m.cafe.naver.com/*
 // @grant        none
 // ==/UserScript==
@@ -11,7 +11,7 @@
     'use strict';
 
     // 고속 검색을 위한 상수 정의
-    const BLOCKED_STATUS = new Set(['판매', '판매(안전)', '예약중', '예약중(안전)']);
+    const BLOCKED_STATUS = new Set(['판매', '판매(안전)', '예약중', '예약중(안전)', '신고합니다']);
     const FILTERED_CLASS = 'sell-filtered-item';
     let isProcessing = false;
     let lastScrollY = 0;
