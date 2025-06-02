@@ -1,21 +1,23 @@
 // ==UserScript==
 // @name         덥덥미 광고 차단
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @match        https://wwme.kr/*
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
-    // 특수문자 포함 클래스 선택자 처리
-    var targets = document.querySelectorAll('.xs\\:hidden.block');
-    targets.forEach(function (el) {
-        el.remove();
-    });
-    // 동적 추가 요소 대응
-    const observer = new MutationObserver(() => {
-        document.querySelectorAll('.xs\\:hidden.block').forEach(el => el.remove());
-    });
+
+    // 1. 두 요소를 동시에 제거하는 함수 생성
+    function removeAds() {
+        document.querySelectorAll('.xs\\:hidden.block, .lg\\:block.hidden').forEach(el => el.remove());
+    }
+
+    // 2. 최초 실행
+    removeAds();
+
+    // 3. 동적 요소 감지 로직
+    const observer = new MutationObserver(removeAds);
     observer.observe(document.body, { childList: true, subtree: true });
 })();
