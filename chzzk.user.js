@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Chzzk 자동 넓은 화면
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  치지직 방송 페이지에서 자동으로 넓은 화면(와이드) 모드로 전환합니다.
+// @version      1.4
+// @description  치지직 방송 페이지 및 mul.live 멀티뷰에서 모든 방송에 자동으로 넓은 화면(와이드) 모드로 전환합니다. (효율성 개선)
 // @match        https://chzzk.naver.com/*
 // @match        https://mul.live/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chzzk.naver.com
@@ -12,44 +12,54 @@
 (function () {
     'use strict';
 
-    let wideScreenInterval = null;
-
-    function setWideScreen() {
-        const wideBtn = document.querySelector('button[aria-label="넓은 화면"], button[aria-label="와이드 화면"]');
-        if (wideBtn && !wideBtn.classList.contains('selected')) {
-            wideBtn.click();
-            return true;
-        }
-        return false;
+    // 버튼을 찾아서 넓은 화면 적용
+    function setAllWideScreens() {
+        const wideBtns = document.querySelectorAll('button[aria-label="넓은 화면"], button[aria-label="와이드 화면"]');
+        wideBtns.forEach(btn => {
+            if (!btn.classList.contains('selected')) {
+                btn.click();
+            }
+        });
     }
 
-    function tryWideScreenOnLive() {
-        // 기존 interval이 있으면 정리
-        if (wideScreenInterval) {
-            clearInterval(wideScreenInterval);
-            wideScreenInterval = null;
+    // MutationObserver로 방송 플레이어 추가 감지
+    function observeWideScreenButtons() {
+        // 이미 등록된 옵저버가 있다면 중복 방지
+        if (window.__chzzkWideObserver) {
+            window.__chzzkWideObserver.disconnect();
         }
-        if (window.location.pathname.startsWith('/live/')) {
-            wideScreenInterval = setInterval(() => {
-                if (setWideScreen()) {
-                    // 버튼 클릭 성공 시 interval 정리
-                    clearInterval(wideScreenInterval);
-                    wideScreenInterval = null;
+
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                if (mutation.addedNodes.length > 0) {
+                    setAllWideScreens();
                 }
-            }, 1000);
-        }
-    }
+            }
+        });
 
-    // 최초 진입 시 실행
-    tryWideScreenOnLive();
+        // body 전체 감시 (mul.live는 여러 방송이 동적으로 추가됨)
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // 최초 1회 실행
+        setAllWideScreens();
+
+        // 전역에 저장해서 중복 방지 및 해제 가능
+        window.__chzzkWideObserver = observer;
+    }
 
     // SPA 구조 대응: URL 변경 감지
     let lastPath = window.location.pathname;
     setInterval(() => {
         if (window.location.pathname !== lastPath) {
             lastPath = window.location.pathname;
-            tryWideScreenOnLive();
+            observeWideScreenButtons();
         }
     }, 500);
+
+    // 최초 진입 시 실행
+    observeWideScreenButtons();
 
 })();
