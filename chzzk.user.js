@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Chzzk 자동 넓은 화면
 // @namespace    http://tampermonkey.net/
-// @version      1.8
-// @description  치지직 방송 페이지 및 mul.live 멀티뷰에서 자동 넓은 화면
+// @version      1.8.1
+// @description  치지직 라이브 방송 자동 넓은 화면 적용
 // @match        https://chzzk.naver.com/*
 // @match        https://mul.live/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chzzk.naver.com
@@ -13,6 +13,12 @@
     'use strict';
 
     let autoWideEnabled = true; // 기본값 ON
+
+    // 라이브 방송 페이지인지 확인하는 함수
+    function isLivePage() {
+        // /live/로 시작하고, 그 뒤에 방송ID(영문, 숫자) 존재
+        return /^\/live\/[a-zA-Z0-9]+/.test(window.location.pathname);
+    }
 
     // 상태 UI 표시 함수
     function showStatusUI(text) {
@@ -52,12 +58,12 @@
     GM_registerMenuCommand("자동 넓은 화면 켜기/끄기", function () {
         autoWideEnabled = !autoWideEnabled;
         showStatusUI('자동 넓은 화면: ' + (autoWideEnabled ? 'ON' : 'OFF'));
-        if (autoWideEnabled) setAllWideScreens();
+        if (autoWideEnabled && isLivePage()) setAllWideScreens();
     });
 
     // 넓은 화면 적용 함수
     function setAllWideScreens() {
-        if (!autoWideEnabled) return;
+        if (!autoWideEnabled || !isLivePage()) return;
         const wideBtns = document.querySelectorAll('button[aria-label="넓은 화면"], button[aria-label="와이드 화면"]');
         wideBtns.forEach(btn => {
             if (!btn.classList.contains('selected')) {
@@ -86,13 +92,18 @@
     setInterval(() => {
         if (window.location.pathname !== lastPath) {
             lastPath = window.location.pathname;
-            observeWideScreenButtons();
+            if (isLivePage()) {
+                observeWideScreenButtons();
+                showStatusUI('자동 넓은 화면: ' + (autoWideEnabled ? 'ON' : 'OFF'));
+            } else if (window.__chzzkWideObserver) {
+                window.__chzzkWideObserver.disconnect();
+            }
         }
     }, 500);
 
     // 최초 진입 시 실행
-    observeWideScreenButtons();
-
-    // 최초 상태 UI 1초 표시
-    showStatusUI('자동 넓은 화면: ON');
+    if (isLivePage()) {
+        observeWideScreenButtons();
+        showStatusUI('자동 넓은 화면: ON');
+    }
 })();
