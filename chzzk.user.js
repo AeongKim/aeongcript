@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Chzzk 자동 넓은 화면
+// @name         Chzzk 자동 넓은 화면 + 채팅 자동 닫기
 // @namespace    http://tampermonkey.net/
-// @version      1.8.1
-// @description  치지직 라이브 방송 자동 넓은 화면 적용
+// @version      1.8.2
+// @description  치지직 라이브 방송 자동 넓은 화면 및 채팅창 자동 닫기
 // @match        https://chzzk.naver.com/*
 // @match        https://mul.live/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chzzk.naver.com
@@ -12,15 +12,12 @@
 (function () {
     'use strict';
 
-    let autoWideEnabled = true; // 기본값 ON
+    let autoWideEnabled = true;
 
-    // 라이브 방송 페이지인지 확인하는 함수
     function isLivePage() {
-        // /live/로 시작하고, 그 뒤에 방송ID(영문, 숫자) 존재
         return /^\/live\/[a-zA-Z0-9]+/.test(window.location.pathname);
     }
 
-    // 상태 UI 표시 함수
     function showStatusUI(text) {
         let statusDiv = document.getElementById('chzzkWideStatusUI');
         if (!statusDiv) {
@@ -54,14 +51,18 @@
         }, 1000);
     }
 
-    // 메뉴 1개만 등록 (상태 표시는 UI로만)
     GM_registerMenuCommand("자동 넓은 화면 켜기/끄기", function () {
         autoWideEnabled = !autoWideEnabled;
         showStatusUI('자동 넓은 화면: ' + (autoWideEnabled ? 'ON' : 'OFF'));
         if (autoWideEnabled && isLivePage()) setAllWideScreens();
     });
 
-    // 넓은 화면 적용 함수
+    // 채팅창 자동 닫기 함수
+    function closeChatPanel() {
+        const closeBtn = document.querySelector('button.live_chatting_header_button__t2pa1[aria-label="채팅 접기"]');
+        if (closeBtn) closeBtn.click();
+    }
+
     function setAllWideScreens() {
         if (!autoWideEnabled || !isLivePage()) return;
         const wideBtns = document.querySelectorAll('button[aria-label="넓은 화면"], button[aria-label="와이드 화면"]');
@@ -70,9 +71,10 @@
                 btn.click();
             }
         });
+        // 넓은 화면 적용 후 채팅창 닫기
+        closeChatPanel();
     }
 
-    // MutationObserver로 동적 감지
     function observeWideScreenButtons() {
         if (window.__chzzkWideObserver) window.__chzzkWideObserver.disconnect();
 
@@ -87,7 +89,6 @@
         window.__chzzkWideObserver = observer;
     }
 
-    // SPA 구조 대응: URL 변경 감지
     let lastPath = window.location.pathname;
     setInterval(() => {
         if (window.location.pathname !== lastPath) {
@@ -101,7 +102,6 @@
         }
     }, 500);
 
-    // 최초 진입 시 실행
     if (isLivePage()) {
         observeWideScreenButtons();
         showStatusUI('자동 넓은 화면: ON');
