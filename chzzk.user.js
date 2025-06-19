@@ -51,10 +51,26 @@
         }, 1000);
     }
 
-    GM_registerMenuCommand("자동 넓은 화면 켜기/끄기", function () {
+    function toggleAutoWide() {
         autoWideEnabled = !autoWideEnabled;
         showStatusUI('자동 넓은 화면: ' + (autoWideEnabled ? 'ON' : 'OFF'));
         if (autoWideEnabled && isLivePage()) setAllWideScreens();
+    }
+
+    GM_registerMenuCommand("자동 넓은 화면 켜기/끄기", toggleAutoWide);
+
+    // Alt + 3 단축키 등록
+    window.addEventListener('keydown', function (e) {
+        // Alt + 3 (키코드 51)
+        if (e.altKey && e.key === '3') {
+            // 입력창 등에서 오작동 방지
+            if (document.activeElement && (
+                document.activeElement.tagName === 'INPUT' ||
+                document.activeElement.tagName === 'TEXTAREA' ||
+                document.activeElement.isContentEditable
+            )) return;
+            toggleAutoWide();
+        }
     });
 
     // 채팅창 자동 닫기 함수
@@ -71,7 +87,6 @@
                 btn.click();
             }
         });
-        // 넓은 화면 적용 후 채팅창 닫기
         closeChatPanel();
     }
 
