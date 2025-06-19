@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Chzzk 자동 넓은 화면 + 채팅 자동 닫기
 // @namespace    http://tampermonkey.net/
-// @version      1.8.2
+// @version      1.8.3
 // @description  치지직 라이브 방송 자동 넓은 화면 및 채팅창 자동 닫기
 // @match        https://chzzk.naver.com/*
 // @match        https://mul.live/*
